@@ -28,7 +28,8 @@ export default function ConfirmDialog({
       onRequestClose={onCancel}
     >
       <Pressable style={styles.overlay} onPress={onCancel}>
-        <View style={styles.dialog}>
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <View style={styles.dialog}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           
@@ -53,6 +54,7 @@ export default function ConfirmDialog({
             </TouchableOpacity>
           </View>
         </View>
+        </Pressable>
       </Pressable>
     </Modal>
   );
