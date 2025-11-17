@@ -126,11 +126,11 @@ export default function EventDetailModal({
                   {eventType.toUpperCase()}
                 </Text>
               </View>
-              {isHome && eventType === 'game' && (
+              {(isHome && eventType === 'game') ? (
                 <View style={styles.homeBadge}>
                   <Text style={styles.homeBadgeText}>HOME</Text>
                 </View>
-              )}
+              ) : null}
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={theme.colors.text} />
