@@ -211,7 +211,7 @@ export default function EventsScreen() {
       <ConfirmDialog
         visible={deleteDialogVisible}
         title="Delete Event"
-        message={`Are you sure you want to delete "${eventToDelete?.title}"?`}
+        message={eventToDelete ? `Are you sure you want to delete "${eventToDelete.title}"?` : "Are you sure you want to delete this event?"}
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={confirmDelete}
