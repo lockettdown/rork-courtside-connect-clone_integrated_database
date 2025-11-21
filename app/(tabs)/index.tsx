@@ -15,7 +15,7 @@ import { Event, Team, Player } from '@/types';
 import uuid from 'react-native-uuid';
 
 export default function HomeScreen() {
-  const { user, teams = [], events = [], addTeam, addEvent, addPlayer, deleteEvent } = useApp();
+  const { user, teams = [], events = [], addTeam, addEvent, addPlayer, deleteEvent, updateEvent } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
@@ -113,7 +113,7 @@ export default function HomeScreen() {
   };
 
   const handleUpdateEvent = (updatedEvent: Event) => {
-    console.log('Event updated:', updatedEvent);
+    updateEvent(updatedEvent);
   };
 
   const confirmDelete = () => {
