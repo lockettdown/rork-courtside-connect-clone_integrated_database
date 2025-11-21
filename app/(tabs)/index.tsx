@@ -171,8 +171,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {upcomingEvents.map((event) => (
-            <View key={event.id} style={styles.eventCard}>
+          {upcomingEvents.map((event) => {
+            const eventDate = new Date(event.date + ' ' + event.time);
+            return (
+              <View key={event.id} style={styles.eventCard}>
               <TouchableOpacity
                 style={styles.eventMainContent}
                 onPress={() => handleEventPress(event)}
@@ -184,7 +186,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventTime}>{`${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} | ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}</Text>
+                <Text style={styles.eventTime}>{`${eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} | ${eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}</Text>
                 <Text style={styles.eventLocation}>{event.location}</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -195,7 +197,8 @@ export default function HomeScreen() {
                 <Trash2 size={20} color="#EF4444" />
               </TouchableOpacity>
             </View>
-          ))}
+            );
+          })}
         </View>
 
         <View style={styles.section}>
