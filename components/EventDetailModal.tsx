@@ -74,9 +74,9 @@ export default function EventDetailModal({
 
   const formatDate = (dateStr: string) => {
     try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
-      return date.toLocaleDateString('en-US', { 
+      const dateObj = new Date(dateStr);
+      if (isNaN(dateObj.getTime())) return dateStr;
+      return dateObj.toLocaleDateString('en-US', { 
         weekday: 'short',
         month: 'short', 
         day: 'numeric' 
@@ -90,9 +90,9 @@ export default function EventDetailModal({
     try {
       const [hours, minutes] = timeStr.split(':').map(Number);
       if (isNaN(hours) || isNaN(minutes)) return timeStr;
-      const date = new Date();
-      date.setHours(hours, minutes, 0, 0);
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const dateObj = new Date();
+      dateObj.setHours(hours, minutes, 0, 0);
+      return dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     } catch (error) {
       return timeStr;
     }

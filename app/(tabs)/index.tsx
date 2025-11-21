@@ -31,10 +31,7 @@ export default function HomeScreen() {
     .sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime())
     .slice(0, 3);
 
-  const formatDate = (dateStr: string, timeStr: string) => {
-    const date = new Date(dateStr + ' ' + timeStr);
-    return `${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-  };
+
 
   const handleSaveTeam = async (teamData: {
     name: string;
@@ -187,7 +184,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventTime}>{formatDate(event.date, event.time)}</Text>
+                <Text style={styles.eventTime}>{`${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} | ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}</Text>
                 <Text style={styles.eventLocation}>{event.location}</Text>
               </TouchableOpacity>
               <TouchableOpacity
