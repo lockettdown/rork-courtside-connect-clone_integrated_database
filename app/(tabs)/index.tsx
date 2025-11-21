@@ -33,8 +33,7 @@ export default function HomeScreen() {
 
   const formatDate = (dateStr: string, timeStr: string) => {
     const date = new Date(dateStr + ' ' + timeStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' • ' + 
-           date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return `${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
   };
 
   const handleSaveTeam = async (teamData: {

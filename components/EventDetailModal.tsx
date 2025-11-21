@@ -137,7 +137,7 @@ export default function EventDetailModal({
             </TouchableOpacity>
           </View>
           <Text style={styles.eventTitle}>{title}</Text>
-          {opponent && (
+          {!!opponent && (
             <Text style={styles.opponentText}>vs {opponent}</Text>
           )}
           
