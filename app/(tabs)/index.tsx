@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Settings, Trash2 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
@@ -15,7 +15,7 @@ import { Event, Team, Player } from '@/types';
 import uuid from 'react-native-uuid';
 
 export default function HomeScreen() {
-  const { user, teams = [], events = [], addTeam, addEvent, addPlayer, deleteEvent, updateEvent } = useApp();
+  const { user, teams = [], events = [], addTeam, addEvent, addPlayer, deleteEvent, updateEvent, refreshData, isLoading } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
@@ -26,10 +26,28 @@ export default function HomeScreen() {
   const [eventToDelete, setEventToDelete] = useState<{ id: string; title: string } | null>(null);
   const [showEventDetail, setShowEventDetail] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshData();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const upcomingEvents = (events || [])
     .sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime())
     .slice(0, 3);
+
+  if (isLoading && !refreshing && teams.length === 0) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
 
 
@@ -129,6 +147,9 @@ export default function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+        }
       >
         <View style={styles.header}>
           <View>

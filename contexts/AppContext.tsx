@@ -624,6 +624,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFan,
     deleteFan,
     deleteTeam,
+    refreshData: async () => {
+      await Promise.all([
+        utils.teams.getAll.invalidate(),
+        utils.players.getAll.invalidate(),
+        utils.events.getAll.invalidate(),
+        utils.games.getAll.invalidate(),
+        utils.plays.getAll.invalidate(),
+        utils.fans.getAll.invalidate(),
+      ]);
+    },
     isLoading: teamsQuery.isLoading || playersQuery.isLoading || eventsQuery.isLoading || authLoading,
   }), [user, session, selectedTeamId, teams, players, events, messages, games, plays, fans, login, signup, logout, addTeam, addPlayer, updatePlayer, addEvent, updateEvent, deleteEvent, addGame, updateGame, addPlay, deletePlay, addFan, updateFan, deleteFan, deleteTeam, teamsQuery.isLoading, playersQuery.isLoading, eventsQuery.isLoading, authLoading]);
 });

@@ -3,6 +3,8 @@ import { httpLink } from "@trpc/client";
 import type { AppRouter } from "@/backend/trpc/app-router";
 import superjson from "superjson";
 
+import Constants from "expo-constants";
+
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
@@ -12,6 +14,11 @@ const getBaseUrl = () => {
 
   if (typeof window !== 'undefined') {
     return window.location.origin;
+  }
+
+  if (Constants.expoConfig?.hostUri) {
+    const hostUri = Constants.expoConfig.hostUri;
+    return `http://${hostUri}`;
   }
 
   throw new Error(
