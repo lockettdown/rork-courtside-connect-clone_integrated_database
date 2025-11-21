@@ -1,13 +1,14 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, Fan, Game, Message, Play, Player, Team, User } from '@/types';
 import { MOCK_MESSAGES } from '@/constants/mockData';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { trpc } from '@/lib/trpc';
 
 export const [AppProvider, useApp] = createContextHook(() => {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
@@ -37,224 +38,50 @@ export const [AppProvider, useApp] = createContextHook(() => {
           email: session.user.email || '',
           role: 'coach',
         });
-        queryClient.invalidateQueries({ queryKey: ['teams'] });
-        queryClient.invalidateQueries({ queryKey: ['players'] });
-        queryClient.invalidateQueries({ queryKey: ['events'] });
-        queryClient.invalidateQueries({ queryKey: ['games'] });
-        queryClient.invalidateQueries({ queryKey: ['plays'] });
-        queryClient.invalidateQueries({ queryKey: ['fans'] });
+        // Invalidate tRPC queries
+        utils.teams.getAll.invalidate();
+        utils.players.getAll.invalidate();
+        utils.events.getAll.invalidate();
+        utils.games.getAll.invalidate();
+        utils.plays.getAll.invalidate();
+        utils.fans.getAll.invalidate();
       } else {
         setUser(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [queryClient]);
+  }, [utils]);
 
-  const teamsQuery = useQuery({
-    queryKey: ['teams', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      console.log('Fetching teams for user:', user.id);
-      const { data, error } = await supabase
-        .from('teams')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching teams:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Teams table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      console.log('Fetched teams:', data);
-      return data.map(t => ({
-        id: t.id,
-        name: t.name,
-        record: t.record,
-        playerCount: t.player_count,
-        avgPPG: t.avg_ppg,
-      })) as Team[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const teamsQuery = trpc.teams.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
-  const playersQuery = useQuery({
-    queryKey: ['players', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      console.log('Fetching players for user:', user.id);
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching players:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Players table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      console.log('Fetched players:', data);
-      return data.map(p => ({
-        id: p.id,
-        name: p.name,
-        jerseyNumber: p.jersey_number,
-        position: p.position,
-        teamId: p.team_id,
-        stats: {
-          points: p.points,
-          assists: p.assists,
-          rebounds: p.rebounds,
-          offensiveRebounds: p.offensive_rebounds,
-          defensiveRebounds: p.defensive_rebounds,
-          steals: p.steals,
-          blocks: p.blocks,
-          turnovers: p.turnovers,
-          fouls: p.fouls,
-        },
-      })) as Player[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const playersQuery = trpc.players.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
-  const eventsQuery = useQuery({
-    queryKey: ['events', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      console.log('Fetching events for user:', user.id);
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching events:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Events table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      console.log('Fetched events:', data);
-      return data.map(e => ({
-        id: e.id,
-        type: e.type,
-        title: e.title,
-        opponent: e.opponent,
-        teamId: e.team_id,
-        teamName: e.team_name,
-        date: e.date,
-        time: e.time,
-        location: e.location,
-        isHome: e.is_home,
-      })) as Event[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const eventsQuery = trpc.events.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
-  const gamesQuery = useQuery({
-    queryKey: ['games', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('games')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching games:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Games table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      return data.map(g => ({
-        id: g.id,
-        homeTeamId: g.home_team_id,
-        awayTeamId: g.away_team_id,
-        homeScore: g.home_score,
-        awayScore: g.away_score,
-        quarter: g.quarter,
-        date: g.date,
-        location: g.location,
-        playerGameStats: g.player_game_stats || {},
-        onCourt: g.on_court || [],
-        events: g.events || [],
-      })) as Game[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const gamesQuery = trpc.games.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
-  const playsQuery = useQuery({
-    queryKey: ['plays', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('plays')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching plays:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Plays table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      return data.map(p => ({
-        id: p.id,
-        name: p.name,
-        drawing: p.drawing,
-        createdAt: p.created_at,
-      })) as Play[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const playsQuery = trpc.plays.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
-  const fansQuery = useQuery({
-    queryKey: ['fans', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('fans')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('invited_at', { ascending: false });
-      if (error) {
-        console.error('Error fetching fans:', JSON.stringify(error, null, 2));
-        if (error.code === 'PGRST205') {
-          console.log('Fans table not found - returning empty array');
-          return [];
-        }
-        throw error;
-      }
-      return data.map(f => ({
-        id: f.id,
-        name: f.name,
-        email: f.email,
-        teamId: f.team_id,
-        playerId: f.player_id,
-        playerName: f.player_name,
-        status: f.status,
-        invitedAt: f.invited_at,
-        joinedAt: f.joined_at,
-      })) as Fan[];
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
+  const fansQuery = trpc.fans.getAll.useQuery(
+    { userId: user?.id || '' },
+    { enabled: !!user?.id }
+  );
 
   const teams = teamsQuery.data || [];
   const players = playersQuery.data || [];
@@ -333,7 +160,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      utils.teams.getAll.invalidate();
     },
     onError: (error: Error) => {
       console.error('Error adding team:', error.message);
@@ -392,8 +219,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      utils.players.getAll.invalidate();
+      utils.teams.getAll.invalidate();
     },
     onError: (error: Error) => {
       console.error('Error adding player:', error.message);
@@ -438,7 +265,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players'] });
+      utils.players.getAll.invalidate();
     },
   });
 
@@ -475,7 +302,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      utils.events.getAll.invalidate();
     },
     onError: (error: Error) => {
       console.error('Error adding event:', error.message);
@@ -511,7 +338,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      utils.events.getAll.invalidate();
     },
   });
 
@@ -544,7 +371,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+      utils.games.getAll.invalidate();
     },
   });
 
@@ -575,8 +402,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
+      utils.games.getAll.invalidate();
+      utils.players.getAll.invalidate();
     },
   });
 
@@ -601,7 +428,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plays'] });
+      utils.plays.getAll.invalidate();
     },
   });
 
@@ -620,7 +447,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plays'] });
+      utils.plays.getAll.invalidate();
     },
   });
 
@@ -650,7 +477,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fans'] });
+      utils.fans.getAll.invalidate();
     },
   });
 
@@ -679,7 +506,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fans'] });
+      utils.fans.getAll.invalidate();
     },
   });
 
@@ -698,7 +525,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fans'] });
+      utils.fans.getAll.invalidate();
     },
   });
 
@@ -722,10 +549,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
       console.log('Team deleted successfully');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      queryClient.invalidateQueries({ queryKey: ['fans'] });
+      utils.teams.getAll.invalidate();
+      utils.players.getAll.invalidate();
+      utils.events.getAll.invalidate();
+      utils.fans.getAll.invalidate();
     },
     onError: (error: Error) => {
       console.error('Error deleting team:', error.message);
@@ -753,7 +580,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       console.log('Event deleted successfully');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      utils.events.getAll.invalidate();
     },
     onError: (error: Error) => {
       console.error('Error deleting event:', error.message);
