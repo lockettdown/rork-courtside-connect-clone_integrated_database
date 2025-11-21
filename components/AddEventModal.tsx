@@ -227,13 +227,15 @@ export default function AddEventModal({ visible, onClose, onSave }: AddEventModa
                   value={selectedDate}
                   mode="date"
                   display={Platform.select({
-                    ios: 'spinner',
+                    ios: 'inline',
                     android: 'default',
                     web: 'default',
                   })}
                   onChange={handleDateChange}
                   minimumDate={new Date()}
                   style={Platform.OS === 'web' ? styles.webPicker : undefined}
+                  themeVariant="dark"
+                  accentColor={theme.colors.primary}
                 />
                 {Platform.OS === 'ios' && (
                   <TouchableOpacity
@@ -271,6 +273,8 @@ export default function AddEventModal({ visible, onClose, onSave }: AddEventModa
                   })}
                   onChange={handleTimeChange}
                   style={Platform.OS === 'web' ? styles.webPicker : undefined}
+                  themeVariant="dark"
+                  accentColor={theme.colors.primary}
                 />
                 {Platform.OS === 'ios' && (
                   <TouchableOpacity
