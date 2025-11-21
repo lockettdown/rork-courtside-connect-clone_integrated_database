@@ -182,10 +182,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (!user?.id) throw new Error('Not authenticated');
       console.log('Adding player:', player);
       
+      /* 
       const teamExists = teams.find(t => t.id === player.teamId);
       if (!teamExists) {
         throw new Error('Team no longer exists. Please refresh and try again.');
       }
+      */
       
       const { data, error } = await supabase
         .from('players')
