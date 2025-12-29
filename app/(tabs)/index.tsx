@@ -174,7 +174,7 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={styles.teamCardInner}
                   activeOpacity={0.7}
-                  onPress={() => router.push(`/(tabs)/team/${team.id}`)}
+                  onPress={() => router.push(`/team/${team.id}`)}
                 >
                   <Text style={styles.teamCardName}>{team.name}</Text>
                   <Text style={styles.teamCardRecord}>{team.record}</Text>

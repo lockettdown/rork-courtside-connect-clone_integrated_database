@@ -45,7 +45,11 @@ export default function TeamScreen() {
     setIsPlayerDetailModalVisible(false);
     setIsAddEventModalVisible(false);
     setIsAddFanModalVisible(false);
-    router.replace('/(tabs)/coach');
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
   };
 
   if (!team) {
@@ -207,7 +211,7 @@ export default function TeamScreen() {
                   teamFans.map((fan) => (
                     <View key={fan.id} style={styles.fanCard}>
                       <View style={styles.fanAvatar}>
-                        <Text style={styles.fanAvatarText}>{fan.name.split(' ').map(n => n[0]).join('')}</Text>
+                        <Text style={styles.fanAvatarText}>{fan.name.split(' ').map((n: string) => n[0]).join('')}</Text>
                       </View>
                       <View style={styles.fanInfo}>
                         <Text style={styles.fanName}>{fan.name}</Text>
@@ -449,6 +453,7 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xxl,
     fontWeight: '700' as const,
     color: theme.colors.text,
+    marginBottom: 4,
   },
   statLabel: {
     fontSize: theme.fontSize.sm,

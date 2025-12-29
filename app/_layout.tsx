@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -25,7 +26,7 @@ function RootLayoutNav() {
     } else if (isAuthenticated && !inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, segments, isLoading]);
+  }, [isAuthenticated, segments, isLoading, router]);
 
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
