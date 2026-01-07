@@ -31,6 +31,15 @@ export const trpcClient = trpc.createClient({
     httpLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
+      fetch(url, options) {
+        console.log('tRPC fetch URL:', url);
+        return fetch(url, options).catch(error => {
+          console.error('tRPC fetch error:', error);
+          console.error('URL:', url);
+          console.error('Base URL:', getBaseUrl());
+          throw error;
+        });
+      },
     }),
   ],
 });

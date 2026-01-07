@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, Fan, Game, Message, Play, Player, Team, User } from '@/types';
 import { MOCK_MESSAGES } from '@/constants/mockData';
@@ -55,40 +55,124 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const teamsQuery = trpc.teams.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
+
+  useEffect(() => {
+    if (teamsQuery.error) {
+      console.error('Error fetching teams:', { 
+        message: teamsQuery.error.message, 
+        details: teamsQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [teamsQuery.error]);
 
   const playersQuery = trpc.players.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
+
+  useEffect(() => {
+    if (playersQuery.error) {
+      console.error('Error fetching players:', { 
+        message: playersQuery.error.message, 
+        details: playersQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [playersQuery.error]);
 
   const eventsQuery = trpc.events.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
+
+  useEffect(() => {
+    if (eventsQuery.error) {
+      console.error('Error fetching events:', { 
+        message: eventsQuery.error.message, 
+        details: eventsQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [eventsQuery.error]);
 
   const gamesQuery = trpc.games.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
+
+  useEffect(() => {
+    if (gamesQuery.error) {
+      console.error('Error fetching games:', { 
+        message: gamesQuery.error.message, 
+        details: gamesQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [gamesQuery.error]);
 
   const playsQuery = trpc.plays.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
+
+  useEffect(() => {
+    if (playsQuery.error) {
+      console.error('Error fetching plays:', { 
+        message: playsQuery.error.message, 
+        details: playsQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [playsQuery.error]);
 
   const fansQuery = trpc.fans.getAll.useQuery(
     { userId: user?.id || '' },
-    { enabled: !!user?.id }
+    { 
+      enabled: !!user?.id,
+      retry: 1
+    }
   );
 
-  const teams = teamsQuery.data || [];
-  const players = playersQuery.data || [];
-  const events = eventsQuery.data || [];
-  const games = gamesQuery.data || [];
-  const plays = playsQuery.data || [];
-  const fans = fansQuery.data || [];
+  useEffect(() => {
+    if (fansQuery.error) {
+      console.error('Error fetching fans:', { 
+        message: fansQuery.error.message, 
+        details: fansQuery.error.toString(), 
+        hint: '', 
+        code: '' 
+      });
+    }
+  }, [fansQuery.error]);
+
+  const teams = useMemo(() => teamsQuery.data || [], [teamsQuery.data]);
+  const players = useMemo(() => playersQuery.data || [], [playersQuery.data]);
+  const events = useMemo(() => eventsQuery.data || [], [eventsQuery.data]);
+  const games = useMemo(() => gamesQuery.data || [], [gamesQuery.data]);
+  const plays = useMemo(() => playsQuery.data || [], [playsQuery.data]);
+  const fans = useMemo(() => fansQuery.data || [], [fansQuery.data]);
 
   useEffect(() => {
     if (teams.length > 0 && !selectedTeamId) {
@@ -97,15 +181,23 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [teams, selectedTeamId]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      console.error('Login error:', error.message);
+    try {
+      console.log('Attempting login to Supabase...');
+      console.log('Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        console.error('Login error:', error.message);
+        throw error;
+      }
+      console.log('Login successful');
+      return data;
+    } catch (error: any) {
+      console.error('Login error:', error);
       throw error;
     }
-    return data;
   }, []);
 
   const signup = useCallback(async (fullName: string, email: string, password: string) => {
@@ -167,15 +259,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
       alert(`Error adding team: ${error.message}`);
     },
   });
+  const { mutate: mutateAddTeam } = addTeamMutation;
 
-  const addTeam = (team: Team): Promise<void> => {
+  const addTeam = useCallback((team: Team): Promise<void> => {
     return new Promise((resolve, reject) => {
-      addTeamMutation.mutate(team, {
+      mutateAddTeam(team, {
         onSuccess: () => resolve(),
         onError: (error) => reject(error),
       });
     });
-  };
+  }, [mutateAddTeam]);
 
   const addPlayerMutation = useMutation({
     mutationFn: async (player: Player) => {
@@ -229,15 +322,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
       alert(`Error adding player: ${error.message}`);
     },
   });
+  const { mutate: mutateAddPlayer } = addPlayerMutation;
 
-  const addPlayer = (player: Player): Promise<void> => {
+  const addPlayer = useCallback((player: Player): Promise<void> => {
     return new Promise((resolve, reject) => {
-      addPlayerMutation.mutate(player, {
+      mutateAddPlayer(player, {
         onSuccess: () => resolve(),
         onError: (error) => reject(error),
       });
     });
-  };
+  }, [mutateAddPlayer]);
 
   const updatePlayerMutation = useMutation({
     mutationFn: async (updatedPlayer: Player) => {
@@ -270,10 +364,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.players.getAll.invalidate();
     },
   });
+  const { mutate: mutateUpdatePlayer } = updatePlayerMutation;
 
-  const updatePlayer = (updatedPlayer: Player) => {
-    updatePlayerMutation.mutate(updatedPlayer);
-  };
+  const updatePlayer = useCallback((updatedPlayer: Player) => {
+    mutateUpdatePlayer(updatedPlayer);
+  }, [mutateUpdatePlayer]);
 
   const addEventMutation = useMutation({
     mutationFn: async (event: Event) => {
@@ -311,10 +406,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       alert(`Error adding event: ${error.message}`);
     },
   });
+  const { mutate: mutateAddEvent } = addEventMutation;
 
-  const addEvent = (event: Event) => {
-    addEventMutation.mutate(event);
-  };
+  const addEvent = useCallback((event: Event) => {
+    mutateAddEvent(event);
+  }, [mutateAddEvent]);
 
   const updateEventMutation = useMutation({
     mutationFn: async (updatedEvent: Event) => {
@@ -343,10 +439,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.events.getAll.invalidate();
     },
   });
+  const { mutate: mutateUpdateEvent } = updateEventMutation;
 
-  const updateEvent = (updatedEvent: Event) => {
-    updateEventMutation.mutate(updatedEvent);
-  };
+  const updateEvent = useCallback((updatedEvent: Event) => {
+    mutateUpdateEvent(updatedEvent);
+  }, [mutateUpdateEvent]);
 
   const addGameMutation = useMutation({
     mutationFn: async (game: Game) => {
@@ -376,10 +473,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.games.getAll.invalidate();
     },
   });
+  const { mutate: mutateAddGame } = addGameMutation;
 
-  const addGame = (game: Game) => {
-    addGameMutation.mutate(game);
-  };
+  const addGame = useCallback((game: Game) => {
+    mutateAddGame(game);
+  }, [mutateAddGame]);
 
   const updateGameMutation = useMutation({
     mutationFn: async ({ gameId, updates }: { gameId: string; updates: Partial<Game> }) => {
@@ -408,10 +506,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.players.getAll.invalidate();
     },
   });
+  const { mutate: mutateUpdateGame } = updateGameMutation;
 
-  const updateGame = (gameId: string, updates: Partial<Game>) => {
-    updateGameMutation.mutate({ gameId, updates });
-  };
+  const updateGame = useCallback((gameId: string, updates: Partial<Game>) => {
+    mutateUpdateGame({ gameId, updates });
+  }, [mutateUpdateGame]);
 
   const addPlayMutation = useMutation({
     mutationFn: async (play: Play) => {
@@ -433,10 +532,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.plays.getAll.invalidate();
     },
   });
+  const { mutate: mutateAddPlay } = addPlayMutation;
 
-  const addPlay = (play: Play) => {
-    addPlayMutation.mutate(play);
-  };
+  const addPlay = useCallback((play: Play) => {
+    mutateAddPlay(play);
+  }, [mutateAddPlay]);
 
   const deletePlayMutation = useMutation({
     mutationFn: async (playId: string) => {
@@ -452,10 +552,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.plays.getAll.invalidate();
     },
   });
+  const { mutate: mutateDeletePlay } = deletePlayMutation;
 
-  const deletePlay = (playId: string) => {
-    deletePlayMutation.mutate(playId);
-  };
+  const deletePlay = useCallback((playId: string) => {
+    mutateDeletePlay(playId);
+  }, [mutateDeletePlay]);
 
   const addFanMutation = useMutation({
     mutationFn: async (fan: Fan) => {
@@ -482,10 +583,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.fans.getAll.invalidate();
     },
   });
+  const { mutate: mutateAddFan } = addFanMutation;
 
-  const addFan = (fan: Fan) => {
-    addFanMutation.mutate(fan);
-  };
+  const addFan = useCallback((fan: Fan) => {
+    mutateAddFan(fan);
+  }, [mutateAddFan]);
 
   const updateFanMutation = useMutation({
     mutationFn: async (updatedFan: Fan) => {
@@ -511,10 +613,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.fans.getAll.invalidate();
     },
   });
+  const { mutate: mutateUpdateFan } = updateFanMutation;
 
-  const updateFan = (updatedFan: Fan) => {
-    updateFanMutation.mutate(updatedFan);
-  };
+  const updateFan = useCallback((updatedFan: Fan) => {
+    mutateUpdateFan(updatedFan);
+  }, [mutateUpdateFan]);
 
   const deleteFanMutation = useMutation({
     mutationFn: async (fanId: string) => {
@@ -530,10 +633,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       utils.fans.getAll.invalidate();
     },
   });
+  const { mutate: mutateDeleteFan } = deleteFanMutation;
 
-  const deleteFan = (fanId: string) => {
-    deleteFanMutation.mutate(fanId);
-  };
+  const deleteFan = useCallback((fanId: string) => {
+    mutateDeleteFan(fanId);
+  }, [mutateDeleteFan]);
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (teamId: string) => {
@@ -561,10 +665,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       alert(`Error deleting team: ${error.message}`);
     },
   });
+  const { mutate: mutateDeleteTeam } = deleteTeamMutation;
 
-  const deleteTeam = (teamId: string) => {
-    deleteTeamMutation.mutate(teamId);
-  };
+  const deleteTeam = useCallback((teamId: string) => {
+    mutateDeleteTeam(teamId);
+  }, [mutateDeleteTeam]);
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -589,10 +694,22 @@ export const [AppProvider, useApp] = createContextHook(() => {
       alert(`Error deleting event: ${error.message}`);
     },
   });
+  const { mutate: mutateDeleteEvent } = deleteEventMutation;
 
-  const deleteEvent = (eventId: string) => {
-    deleteEventMutation.mutate(eventId);
-  };
+  const deleteEvent = useCallback((eventId: string) => {
+    mutateDeleteEvent(eventId);
+  }, [mutateDeleteEvent]);
+
+  const refreshData = useCallback(async () => {
+    await Promise.all([
+      utils.teams.getAll.invalidate(),
+      utils.players.getAll.invalidate(),
+      utils.events.getAll.invalidate(),
+      utils.games.getAll.invalidate(),
+      utils.plays.getAll.invalidate(),
+      utils.fans.getAll.invalidate(),
+    ]);
+  }, [utils]);
 
   return useMemo(() => ({
     user,
@@ -624,16 +741,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFan,
     deleteFan,
     deleteTeam,
-    refreshData: async () => {
-      await Promise.all([
-        utils.teams.getAll.invalidate(),
-        utils.players.getAll.invalidate(),
-        utils.events.getAll.invalidate(),
-        utils.games.getAll.invalidate(),
-        utils.plays.getAll.invalidate(),
-        utils.fans.getAll.invalidate(),
-      ]);
-    },
+    refreshData,
     isLoading: teamsQuery.isLoading || playersQuery.isLoading || eventsQuery.isLoading || authLoading,
-  }), [user, session, selectedTeamId, teams, players, events, messages, games, plays, fans, login, signup, logout, addTeam, addPlayer, updatePlayer, addEvent, updateEvent, deleteEvent, addGame, updateGame, addPlay, deletePlay, addFan, updateFan, deleteFan, deleteTeam, teamsQuery.isLoading, playersQuery.isLoading, eventsQuery.isLoading, authLoading]);
+  }), [user, session, selectedTeamId, teams, players, events, messages, games, plays, fans, login, signup, logout, addTeam, addPlayer, updatePlayer, addEvent, updateEvent, deleteEvent, addGame, updateGame, addPlay, deletePlay, addFan, updateFan, deleteFan, deleteTeam, refreshData, teamsQuery.isLoading, playersQuery.isLoading, eventsQuery.isLoading, authLoading]);
 });
