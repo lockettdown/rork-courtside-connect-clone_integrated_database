@@ -8,17 +8,17 @@ import Constants from "expo-constants";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
-    return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  }
-
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
 
   if (Constants.expoConfig?.hostUri) {
-    const hostUri = Constants.expoConfig.hostUri;
-    return `http://${hostUri}`;
+    const hostUri = Constants.expoConfig.hostUri.split(':')[0];
+    return `http://${hostUri}:8081`;
+  }
+
+  if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
+    return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
   throw new Error(
